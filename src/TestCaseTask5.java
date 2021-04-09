@@ -119,8 +119,8 @@ class TestCaseTask5 {
 		assertTrue(b.setCustomerID(2));
 		assertTrue(b.addItem("cereals"));
 		assertTrue(b.addItem("cocoa"));
-		assertEquals(Order.Status.PAID, b.makePayment(new PaymentCash(b.calGrandTotal(), 1000)));
-		assertEquals("2,2,cereals|cocoa,PAID::CASH", b.log());
+		assertEquals(Order.Status.PENDING, b.getPaymentStatus());
+		assertEquals("2,2,cereals|cocoa,PENDING::UNKNOWN", b.log());
 		
 		Order c = new Order(5);
 		assertTrue(c.setCustomerID(2));		// customer's id = 2
@@ -130,10 +130,20 @@ class TestCaseTask5 {
 		assertEquals(Order.Status.PAID, c.makePayment(new PaymentEWallet(c.calGrandTotal(), w, "BBB", "B123")));
 		assertEquals("5,2,cereals|cocoa,PAID::EWALLET", c.log());
 		
+		Order d = new Order();
+		assertTrue(d.setCustomerID(2));		// customer's id = 2
+		assertTrue(d.addItem("coffee"));
+		assertTrue(d.addItem("cereals"));
+		EWallet w2 = DataManagement.walletData.get(2);	// get wallet of customer's id 2
+					// unauthorized E-Wallet
+		assertEquals(Order.Status.VOIDED, d.makePayment(new PaymentEWallet(d.calGrandTotal(), w2, "BBB", "D123")));
+		assertEquals("6,2,coffee|cereals,VOIDED::EWALLET", d.log());
+		
 		List<Order> orders = new ArrayList<Order>();
 		orders.add(a);
 		orders.add(b);
 		orders.add(c);
+		orders.add(d);
 		
 		DataManagement.storeOrders(this.ORDER_FILE, false, orders);
 		// If you cannot implement task 2 and task 4,
